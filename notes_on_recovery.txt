@@ -1,0 +1,73 @@
+10.128.217.122
+
+
+curl -XPUT http://elk-elasticsearch.service.prod.consul:9200/_cluster/settings -H 'Content-Type: application/json' -d '{  "transient" :{
+      "cluster.routing.allocation.exclude._ip" : "10.128.214.83"
+   }
+}';echo
+
+
+curl -XPUT http://elk-elasticsearch.service.prod.consul:9200/_cluster/settings -H 'Content-Type: application/json' -d '{  "transient" :{
+      "cluster.routing.allocation.exclude._ip" : ""
+   }
+}';echo
+
+
+curl -XPUT 10.144.196.14:9200/_cluster/settings -H 'Content-Type: application/json' -d '{  "transient" :{
+      "cluster.routing.allocation.include._ip" : ""
+   }
+}';echo
+
+curl -XPUT http://elk-elasticsearch.service.test.consul:9200/_cluster/settings -H 'Content-Type: application/json' -d '{  "transient" :{
+      "cluster.routing.rebalance.enable" : "all"
+   }
+}';echo
+
+
+
+
+curl -XPUT http://elk-elasticsearch.service.test.consul:9200/_cluster/settings -H 'Content-Type: application/json' -d '{  "transient" :{
+      "cluster.routing.allocation.allow_rebalance" : "indices_all_active"
+   }
+}';echo
+
+curl -XPUT 10.144.196.14:9200/_cluster/settings -H 'Content-Type: application/json' -d '{  "transient" :{
+      "cluster.routing.allocation.cluster_concurrent_rebalance" : 4
+   }
+}';echo
+
+
+curl -XPUT 10.144.196.14:9200/_cluster/settings -H 'Content-Type: application/json' -d '{  "transient" :{
+      "threadpool.search.queue_size" : 2000
+   }
+}';echo
+
+
+curl -XPUT 10.144.196.14:9200/_cluster/settings -H 'Content-Type: application/json' -d '{  "transient" :{
+      "cluster.routing.allocation.enable" : "none"
+   }
+}';echo
+
+
+curl -XPUT 10.144.196.14:9200/_cluster/settings -H 'Content-Type: application/json' -d '{  "transient" :{
+      "cluster.routing.allocation.enable" : "all"
+   }
+}';echo
+
+
+    "cluster.routing.allocation.enable" : "all"
+
+
+curl -XPUT localhost:9200/_cluster/settings -d '{
+"transient" :{
+"threadpool.search.queue_size" : 2000
+
+cluster.routing.allocation.allow_rebalance
+
+
+cluster.routing.allocation.include
+
+
+cluster.routing.rebalance.enable.all
+
+

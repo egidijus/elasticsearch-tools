@@ -5,7 +5,7 @@ you should do this via the api:
 
 ```
 curl -XPUT http://elk-elasticsearch.service.prod.consul:9200/_cluster/settings -H 'Content-Type: application/json' -d '{  "transient" :{
-      "cluster.routing.allocation.exclude._ip" : "10.128.230.159"
+      "cluster.routing.allocation.exclude._ip" : "10.10.10.10"
    }
 }';echo
 ```
@@ -20,7 +20,13 @@ curl -XPUT http://elk-elasticsearch.service.prod.consul:9200/_cluster/settings -
    }
 }';echo
 
+when the output changes from:
+retiring node: 10.10.10.10 relocating: 35 initializing: 0 unassigned: 0 retiring_node_count: 519406211
 
+to
+retiring node: 10.10.10.10 relocating: 0 initializing: 0 unassigned: 0 retiring_node_count: 0
+
+you can kill/terminate the `10.10.10.10` retiring node
 
 """
 import requests
@@ -29,12 +35,11 @@ import sys
 import time
 from datetime import datetime
 
-RETIRING_NODE = "172.17.0.1"
-API_HOST = "http://172.17.0.1:9200"
+API_HOST = "http://elk-elasticsearch.service.prod.consul:9200"
 HEALTH = "/_cluster/health"
 SHARDS = "/_cat/shards?format=json"
 STATS = "/_cluster/stats?human&pretty"
-RET_NODE_STAT = "/_nodes/" + RETIRING_NODE + "/stats/indices"
+SETTINGS = "/_cluster/settings"
 
 
 def prettyfy_json(json_object):
@@ -116,6 +121,23 @@ def get_health(key_name):
         )
 
 
+def get_excluded_ip():
+    try:
+        excluded_ip = client(SETTINGS, API_HOST)
+        # print(
+        #     prettyfy_json(excluded_ip['transient']['cluster']['routing']
+        #                   ['allocation']['exclude']['_ip']))
+        exclude_ip = excluded_ip['transient']['cluster']['routing'][
+            'allocation']['exclude']['_ip']
+        return exclude_ip
+    except Exception as e:
+        print(
+            "Error on line {}".format(sys.exc_info()[-1].tb_lineno),
+            type(e).__name__,
+            e,
+        )
+
+
 def get_arb_value(dictionary):
     """
     because "/_nodes/" + RETIRING_NODE + "/stats/indices?pretty‌"
@@ -125,24 +147,26 @@ def get_arb_value(dictionary):
     get to the values, we simply iterate.
     """
     try:
-        # print(next(iter(dictionary.values())))
         return next(iter(dictionary.values()))
     except StopIteration:
-        # print(next(iter(dictionary.values())))
         print("NOTHING here captain")
         return []
 
 
-def get_doc_count(PATH, API_HOST=API_HOST):
+def get_doc_count(API_HOST=API_HOST):
     """
     this should return just a count of documents from the key:
     ['indices']['docs']['count']
 
     """
+    PATH = "/_nodes/" + get_excluded_ip() + "/stats/indices"
     try:
         doc_count = client(PATH, API_HOST)['nodes']
         doc_count = get_arb_value(doc_count)['indices']['docs']['count']
-        return doc_count
+        if not doc_count:
+            return 0
+        else:
+            return doc_count
     except Exception as e:
         print(
             "Error on line {}".format(sys.exc_info()[-1].tb_lineno),
@@ -158,8 +182,8 @@ def health_average(start_time):
     operations have completed.
     then we loop, with a two second wait.
     example output:
-    retiring node: 10.128.230.159 relocating: 28 initializing: 0 unassigned: 0 retiring_node_count: 878941271
-    retiring node: 10.128.230.159 relocating: 28 initializing: 0 unassigned: 0 retiring_node_count: 878941468
+    retiring node: 10.10.10.10 relocating: 28 initializing: 0 unassigned: 0 retiring_node_count: 878941271
+    retiring node: 10.10.10.10 relocating: 28 initializing: 0 unassigned: 0 retiring_node_count: 878941468
     once all reaches 0, you are ready to kill that node.
     """
     try:
@@ -168,7 +192,7 @@ def health_average(start_time):
             get_health("relocating_shards"),
             get_health("initializing_shards"),
             get_health("unassigned_shards"),
-            get_doc_count(RET_NODE_STAT)
+            get_doc_count()
         ]
         for stat in health:
             while stat in health != 0:
@@ -176,8 +200,8 @@ def health_average(start_time):
                 relocating = get_health("relocating_shards")
                 initializing = get_health("initializing_shards")
                 unassigned = get_health("unassigned_shards")
-                doc_count = get_doc_count(RET_NODE_STAT)
-                print("retiring node:", RETIRING_NODE, "relocating:",
+                doc_count = get_doc_count()
+                print("retiring node:", get_excluded_ip(), "relocating:",
                       relocating, "initializing:", initializing, "unassigned:",
                       unassigned, "retiring_node_count:", doc_count)
     except Exception as e:

@@ -1,7 +1,28 @@
 # tools to make ElasticSearch node management more intuitive.
 
+## What
 This script will tell you the status of a node you are retiring.
+
+## Why
+I wrote this tool to gracefully rotate elastic search instances/nodes. Before, I used to watch kopf and cerebro, if there are any indexes or shards in-flight, if there aren't, I would simply terminate the node/instance.
+Then I would let ES sort itself out and rebalance when a new node joins the cluster.
+
+This was not great.
+Because, if I lost another node, I could experience dataloss. 
+During this chaotic rebalance, the cluster would be in a degraded state, and the performance would be terrible.
+
+Instead, I recommend you use this tool along with `exclude.ip` to gracefully retire a node.
+
+You will know when it's safe to kill a node.
+You will not lose data.
+Your performance should be much better than chaotic node termination.
+Your cluster will remain healthy. 
+
+## How
+
+
 You probably start with making a node excluded from shard allocation:
+
 
 ```
 curl -XPUT http://elasticsearch:9200/_cluster/settings -H 'Content-Type: application/json' -d '{  "transient" :{

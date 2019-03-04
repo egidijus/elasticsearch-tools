@@ -29,12 +29,12 @@ import sys
 import time
 from datetime import datetime
 
-RETIRING_NODE = "10.128.230.159"
-API_HOST = "http://elk-elasticsearch.service.prod.consul:9200"
+RETIRING_NODE = "172.17.0.1"
+API_HOST = "http://172.17.0.1:9200"
 HEALTH = "/_cluster/health"
 SHARDS = "/_cat/shards?format=json"
 STATS = "/_cluster/stats?human&pretty"
-RET_NODE_STAT = "/_nodes/" + RETIRING_NODE + "/stats/indices?pretty‌"
+RET_NODE_STAT = "/_nodes/" + RETIRING_NODE + "/stats/indices"
 
 
 def prettyfy_json(json_object):

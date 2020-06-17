@@ -33,7 +33,9 @@ curl -XPUT http://elasticsearch:9200/_cluster/settings -H 'Content-Type: applica
 
 You would then run this script like this:
 ```
-pip install -r requirements.py
+virtualenv --system-site-packages -p python3 venv
+. ./venv/bin/activate
+pip install -r requirements.txt
 ```
 
 Then :
